@@ -181,13 +181,14 @@ double ClosedCube_BME680::readPressure() {
 
 	uint32_t pres_raw = ((uint32_t)pres_msb << 12) | ((uint32_t)pres_lsb << 4) | ((uint32_t)pres_xlsb >> 4);
 
+/*
 	Serial.println("");
 	Serial.print("pres_msb       = ");Serial.println(pres_msb,HEX);
 	Serial.print("pres_lsb       = ");Serial.println(pres_lsb,HEX);
 	Serial.print("pres_xlsb       = ");Serial.println(pres_xlsb,HEX);
 	Serial.print("pres_raw       = ");Serial.println(pres_raw,DEC);
 	int32_t var1, var2, var3, calc_pres;
-
+*/
 /*
 	var1 = (((int32_t)_calib_dev.tfine) / 2) - 64000;
 	var2 = ((var1 / 4) * (var1 / 4)) / 2048;
@@ -248,6 +249,7 @@ double ClosedCube_BME680::readTemperature() {
 
 	uint32_t temp_raw = ((uint32_t)temp_msb << 12) | ((uint32_t)temp_lsb << 4) | ((uint32_t)temp_xlsb >> 4);
 
+/*
 	Serial.println("");
 	Serial.print("temp_msb       = ");Serial.println(temp_msb,DEC);
 	Serial.print("temp_lsb       = ");Serial.println(temp_lsb,DEC);
@@ -255,7 +257,7 @@ double ClosedCube_BME680::readTemperature() {
 
 	int64_t var1, var2, var3;
   int16_t calc_temp;
-
+*/
 /*
 	var1 = ((int32_t)temp_raw / 8) - ((int32_t)_calib_temp.t1 * 2);
 	var2 = (var1 * (int32_t)_calib_temp.t2) / 2048;
