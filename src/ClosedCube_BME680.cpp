@@ -122,6 +122,7 @@ uint32_t ClosedCube_BME680::readGasResistance() {
 
 	uint8_t gas_msb = readByte(0x2A);
 	gas_r_lsb.raw = readByte(0x2B);
+<<<<<<< Updated upstream
         
        
         uint16_t gas_raw = ((uint16_t)gas_msb) << 2 | (uint16_t)gas_r_lsb.lsb;
@@ -136,6 +137,22 @@ uint32_t ClosedCube_BME680::readGasResistance() {
         
 }
 
+=======
+
+
+        uint16_t gas_raw = ((uint16_t)gas_msb) << 2 | (uint16_t)gas_r_lsb.lsb;
+
+        int64_t var1, var2, var3;
+
+        var1 = (int64_t)((1340 + (5 * (int64_t)_calib_dev.range_sw_err)) * ((int64_t)lookupTable1[gas_r_lsb.range])) / 65536;
+        var2 = (((int64_t)((int64_t)gas_raw * 32768) - (int64_t)(16777216)) + var1);
+        var3 = (((int64_t)lookupTable2[gas_r_lsb.range] * (int64_t)var1) / 512);
+
+        return (uint32_t)((var3 + ((int64_t)var2 / 2)) / (int64_t)var2);
+
+}
+
+>>>>>>> Stashed changes
 ClosedCube_BME680_gas_r_lsb ClosedCube_BME680::read_gas_r_lsb() {
 
         ClosedCube_BME680_gas_r_lsb gas_r_lsb;
@@ -170,7 +187,7 @@ double ClosedCube_BME680::readHumidity() {
 		calc_hum = 100;
 	else if (calc_hum < 0)
 		calc_hum = 0;
-	
+
 	return calc_hum;
 }
 
@@ -181,8 +198,14 @@ double ClosedCube_BME680::readPressure() {
 
 	uint32_t pres_raw = ((uint32_t)pres_msb << 12) | ((uint32_t)pres_lsb << 4) | ((uint32_t)pres_xlsb >> 4);
 
+	Serial.println("");
+	Serial.print("pres_msb       = ");Serial.println(pres_msb,HEX);
+	Serial.print("pres_lsb       = ");Serial.println(pres_lsb,HEX);
+	Serial.print("pres_xlsb       = ");Serial.println(pres_xlsb,HEX);
+	Serial.print("pres_raw       = ");Serial.println(pres_raw,DEC);
 	int32_t var1, var2, var3, calc_pres;
 
+/*
 	var1 = (((int32_t)_calib_dev.tfine) / 2) - 64000;
 	var2 = ((var1 / 4) * (var1 / 4)) / 2048;
 	var2 = ((var2) * (int32_t)_calib_pres.p6) / 4;
@@ -194,21 +217,52 @@ double ClosedCube_BME680::readPressure() {
 	var1 = ((32768 + var1) * (int32_t)_calib_pres.p1) / 32768;
 	calc_pres = (int32_t)(1048576 - pres_raw);
 	calc_pres = (int32_t)((calc_pres - (var2 / 4096)) * (3125));
+<<<<<<< Updated upstream
         
+=======
+
+>>>>>>> Stashed changes
         //prevent an overflow by reversing the order of divison and multiplication if calc_pres >= 2^30
         if (calc_pres >= 1073741824 ) {  // 1073741824 = 2^30, max value of int32 is 2^31
 	  calc_pres = ((calc_pres / var1) * 2);
         }
         else
         {
+<<<<<<< Updated upstream
           calc_pres = ((calc_pres * 2) / var1);  
         }
         
+=======
+          calc_pres = ((calc_pres * 2) / var1);
+        }
+
+>>>>>>> Stashed changes
 	var1 = ((int32_t)_calib_pres.p9 * (int32_t)(((calc_pres / 8) * (calc_pres / 8)) / 8192)) / 4096;
 	var2 = ((int32_t)(calc_pres / 4) * (int32_t)_calib_pres.p8) / 8192;
 	var3 = ((int32_t)(calc_pres / 256) * (int32_t)(calc_pres / 256) * (int32_t)(calc_pres / 256)
 		* (int32_t)_calib_pres.p10) / 131072;
 	calc_pres = (int32_t)(calc_pres)+((var1 + var2 + var3 + ((int32_t)_calib_pres.p7 * 128)) / 16);
+*/
+
+var1 = ((int32_t)_calib_dev.tfine >> 1) - 64000;
+var2 = ((((var1 >> 2) * (var1 >> 2)) >> 11) * (int32_t)_calib_pres.p6) >> 2;
+var2 = var2 + ((var1 * (int32_t)_calib_pres.p5) << 1);
+var2 = (var2 >> 2) + ((int32_t)_calib_pres.p4 << 16);
+var1 = (((((var1 >> 2) * (var1 >> 2)) >> 13) * ((int32_t)_calib_pres.p3 << 5)) >> 3) + (((int32_t)_calib_pres.p2 * var1) >> 1);
+var1 = var1 >> 18;
+var1 = ((32768 + var1) * (int32_t)_calib_pres.p1) >> 15;
+calc_pres = 1048576 - pres_raw;
+calc_pres = (uint32_t)((calc_pres - (var2 >> 12)) * ((uint32_t)3125));
+if (calc_pres >= (1 << 30)) {
+  calc_pres = ((calc_pres / (uint32_t)var1) << 1);
+}
+else {
+  calc_pres = ((calc_pres << 1) / (uint32_t)var1);
+}
+var1 = ((int32_t)_calib_pres.p9 * (int32_t)(((calc_pres >> 3) * (calc_pres >> 3)) >> 13)) >> 12;
+var2 = ((int32_t)(calc_pres >> 2) * (int32_t)_calib_pres.p8) >> 13;
+var3 = ((int32_t)(calc_pres >> 8) * (int32_t)(calc_pres >> 8) * (int32_t)(calc_pres >> 8) * (int32_t)_calib_pres.p10) >> 17;
+calc_pres = (int32_t)(calc_pres) +  ((var1 + var2 + var3 + ((int32_t)_calib_pres.p7 << 7)) >> 4);
 
 	return calc_pres / 100.0;
 }
@@ -221,20 +275,37 @@ double ClosedCube_BME680::readTemperature() {
 
 	uint32_t temp_raw = ((uint32_t)temp_msb << 12) | ((uint32_t)temp_lsb << 4) | ((uint32_t)temp_xlsb >> 4);
 
+<<<<<<< Updated upstream
 	int64_t var1, var2, var3;
         int16_t calc_temp;
+=======
+	Serial.println("");
+	Serial.print("temp_msb       = ");Serial.println(temp_msb,DEC);
+	Serial.print("temp_lsb       = ");Serial.println(temp_lsb,DEC);
+	Serial.print("temp_xlsb       = ");Serial.println(temp_xlsb,DEC);
+>>>>>>> Stashed changes
 
+	int64_t var1, var2, var3;
+  int16_t calc_temp;
+
+/*
 	var1 = ((int32_t)temp_raw / 8) - ((int32_t)_calib_temp.t1 * 2);
 	var2 = (var1 * (int32_t)_calib_temp.t2) / 2048;
 	var3 = ((var1 / 2) * (var1 / 2)) / 4096;
 	var3 = ((var3) * ((int32_t)_calib_temp.t3 * 16)) / 16384;
 	_calib_dev.tfine = (int32_t)(var2 + var3);
 	calc_temp =(int16_t)(((_calib_dev.tfine * 5) + 128) / 256);
+*/
+var1 = ((int32_t)temp_raw >> 3) - ((int32_t)_calib_temp.t1 << 1);
+var2 = (var1 * (int32_t)_calib_temp.t2) >> 11;
+var3 = ((((var1 >> 1) * (var1 >> 1)) >> 12) * ((int32_t)_calib_temp.t3 << 4)) >> 14;
+_calib_dev.tfine = var2 + var3;
+calc_temp = ((_calib_dev.tfine * 5) + 128) >> 8;
 
 	return calc_temp / 100.0;
 }
 
-uint8_t ClosedCube_BME680::setOversampling(ClosedCube_BME680_Oversampling humidity, ClosedCube_BME680_Oversampling temperature, ClosedCube_BME680_Oversampling pressure) {	
+uint8_t ClosedCube_BME680::setOversampling(ClosedCube_BME680_Oversampling humidity, ClosedCube_BME680_Oversampling temperature, ClosedCube_BME680_Oversampling pressure) {
 	ClosedCube_BME680_Ctrl_TP_Register ctrl_meas;
 	ctrl_meas.osrs_t = temperature;
 	ctrl_meas.osrs_p = pressure;
@@ -324,8 +395,8 @@ uint8_t ClosedCube_BME680::loadCalData() {
 
 	_calib_temp.t1 = cal2[9] << 8 | cal2[8];
 	_calib_temp.t2 = cal1[2] << 8 | cal1[1];
-	_calib_temp.t3 = cal1[3];
-	
+	_calib_temp.t3 = cal1[3]; //0x8C
+
 	_calib_hum.h1 = cal2[2] << 4 | (cal2[1] & 0x0F);
 	_calib_hum.h2 = cal2[0] << 4 | cal2[1];
 	_calib_hum.h3 = cal2[3];
@@ -367,6 +438,27 @@ uint8_t ClosedCube_BME680::loadCalData() {
         Serial.println("_calib_dev.res_heat_val         = ");Serial.println(_calib_dev.res_heat_val,DEC);
         
 */
+
+/*
+Serial.println("");
+Serial.print("_calib_temp.t1       = ");Serial.println(_calib_temp.t1,DEC);
+Serial.print("_calib_temp.t2       = ");Serial.println(_calib_temp.t2,DEC);
+Serial.print("_calib_temp.t3       = ");Serial.println(_calib_temp.t3,DEC);
+Serial.println("");
+Serial.print("_calib_pres.p1       = ");Serial.println(_calib_pres.p1,DEC);
+Serial.print("_calib_pres.p2       = ");Serial.println(_calib_pres.p2,DEC);
+Serial.print("_calib_pres.p3       = ");Serial.println(_calib_pres.p3,DEC);
+Serial.print("_calib_pres.p4       = ");Serial.println(_calib_pres.p4,DEC);
+Serial.print("_calib_pres.p5       = ");Serial.println(_calib_pres.p5,DEC);
+Serial.print("_calib_pres.p6       = ");Serial.println(_calib_pres.p6,DEC);
+Serial.print("_calib_pres.p7       = ");Serial.println(_calib_pres.p7,DEC);
+Serial.print("_calib_pres.p8       = ");Serial.println(_calib_pres.p8,DEC);
+Serial.print("_calib_pres.p9       = ");Serial.println(_calib_pres.p9,DEC);
+Serial.print("_calib_pres.p10       = ");Serial.println(_calib_pres.p10,DEC);
+*/
+
+
+
 
 	return 0;
 }
